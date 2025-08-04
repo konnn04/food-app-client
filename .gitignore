@@ -1,4 +1,22 @@
 food-app\package-lock.json
 food-app\node_modules
 server\.venv
+server\__pycache__
+server\venv
+server\*/__pycache__/
+server\*/*/__pycache__/
+server\instance
+server\.env
+food-app\.env
+food-app\dist
+food-app\build
+food-app\coverage
+food-app\.cache
+food-app\.next
+food-app\.nuxt
+food-app\.output
+food-app\.vercel
+food-app\.firebase
+food-app\.firebase-debug.log
+food-app\.firebase-debug.log.*
 
