@@ -1,35 +1,116 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import AppLayout from './components/layout/AppLayout';
+import HamburgerLoader from './components/ui/hamburger-loader';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Pages
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
+import Home from './pages/home/Home';
+import Profile from './pages/profile/Profile';
 
+// Get base URL for GitHub Pages
+const getBaseName = () => {
+  const isGitHubPages = window.location.hostname === 'konnn04.github.io';
+  return isGitHubPages ? '/food-ordering-app' : '';
+};
+
+// Loading Component
+function AppLoading() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <HamburgerLoader size="lg" />
+    </div>
+  );
 }
 
-export default App
+// Protected Route Components
+function ProtectedRoute({ children }) {
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) {
+    return <AppLoading />;
+  }
+  
+  return currentUser ? children : <Navigate to="/login" />;
+}
+
+function PublicRoute({ children }) {
+  const { currentUser, loading } = useAuth();
+  
+  if (loading) {
+    return <AppLoading />;
+  }
+  
+  return !currentUser ? children : <Navigate to="/" />;
+}
+
+function AppRoutes() {
+  return (
+    <Routes>
+      {/* Public routes */}
+      <Route 
+        path="/login" 
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/register" 
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        } 
+      />
+      
+      {/* Protected routes */}
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Home />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/profile" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <Profile />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      {/* Add more protected routes here */}
+      
+      {/* Redirect unknown routes */}
+      <Route path="*" element={<Navigate to="/login" />} />
+    </Routes>
+  );
+}
+
+function App() {
+  return (
+    <Router basename={getBaseName()}>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <AuthProvider>
+          <div className="App">
+            <AppRoutes />
+          </div>
+        </AuthProvider>
+      </ThemeProvider>
+    </Router>
+  );
+}
+
+export default App;
