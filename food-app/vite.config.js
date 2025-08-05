@@ -6,7 +6,7 @@ import { defineConfig } from "vite"
 
 export default defineConfig(({ command, mode }) => {
   // Đơn giản hóa - chỉ check production mode
-  const isProduction = mode === 'production'
+  // const isProduction = mode === 'production'
   
   return {
     plugins: [react(), tailwindcss()],
@@ -19,7 +19,7 @@ export default defineConfig(({ command, mode }) => {
       'process.env': {}
     },
     // Base path sẽ được set khi build cho GitHub Pages
-    base: isProduction ? '/food-ordering-app/' : '/',
+    base: '/',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
