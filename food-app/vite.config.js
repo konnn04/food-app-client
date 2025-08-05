@@ -17,7 +17,8 @@ export default defineConfig(({ command, mode }) => {
     define: {
       'process.env': {}
     },
-    base: './',
+    base: '/',
+    publicDir: 'public',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
