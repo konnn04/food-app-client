@@ -6,7 +6,7 @@ export const useRandomBackground = () => {
 
   useEffect(() => {
     const randomBg = Math.floor(Math.random() * BG_LENGTH); 
-    const bgPath = `/src/assets/bg/${randomBg}.jpg`;
+    const bgPath = `./bg/${randomBg}.jpg`;
     setBackgroundImage(bgPath);
   }, []);
 
