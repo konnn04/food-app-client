@@ -11,12 +11,6 @@ import Register from './pages/auth/Register';
 import Home from './pages/home/Home';
 import Profile from './pages/profile/Profile';
 
-// Get base URL for GitHub Pages
-const getBaseName = () => {
-  const isGitHubPages = window.location.hostname === 'konnn04.github.io';
-  return isGitHubPages ? '/food-ordering-app' : '';
-};
-
 // Loading Component
 function AppLoading() {
   return (
@@ -101,7 +95,7 @@ function AppRoutes() {
 
 function App() {
   return (
-    <Router basename={getBaseName()}>
+    <Router>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <AuthProvider>
           <div className="App">

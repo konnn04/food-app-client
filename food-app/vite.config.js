@@ -5,8 +5,7 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
 export default defineConfig(({ command, mode }) => {
-  // Đơn giản hóa - chỉ check production mode
-  // const isProduction = mode === 'production'
+  const isProduction = mode === 'production'
   
   return {
     plugins: [react(), tailwindcss()],
@@ -18,8 +17,7 @@ export default defineConfig(({ command, mode }) => {
     define: {
       'process.env': {}
     },
-    // Base path sẽ được set khi build cho GitHub Pages
-    base: '/',
+    base: './',
     build: {
       outDir: 'dist',
       assetsDir: 'assets',
