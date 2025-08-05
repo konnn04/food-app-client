@@ -30,7 +30,7 @@ export default function Login() {
     password: ""
   });
 
-  const { currentUser } = useAuth();
+  const { currentUser, login } = useAuth(); // Use login from AuthContext
   const navigate = useNavigate();
 
   const tabs = [
@@ -108,21 +108,15 @@ export default function Login() {
     setSuccess("");
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSuccess("Đăng nhập thành công!");
-      
-      const userData = {
-        id: 1,
+      // Use AuthContext login function instead of direct localStorage
+      await login({
         phone: userForm.phone,
-        role: "customer",
-        name: "Khách hàng"
-      };
+        otp: userForm.otp,
+        role: "customer"
+      });
       
-      localStorage.setItem("user", JSON.stringify(userData));
-      
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      setSuccess("Đăng nhập thành công!");
+      // Navigation will be handled by useEffect when currentUser changes
       
     } catch (err) {
       setError("Số điện thoại hoặc mã OTP không đúng");
@@ -144,17 +138,14 @@ export default function Login() {
     setSuccess("");
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      setSuccess("Đăng nhập thành công!");
-      
-      const staffData = {
-        id: 2,
+      // Use AuthContext login function instead of direct localStorage
+      await login({
         username: staffForm.username,
-        role: "staff",
-        name: "Nhân viên"
-      };
+        password: staffForm.password,
+        role: "staff"
+      });
       
-      localStorage.setItem("user", JSON.stringify(staffData));
+      setSuccess("Đăng nhập thành công!");
       
       if (rememberMe) {
         localStorage.setItem("savedLogin", JSON.stringify({
@@ -165,9 +156,7 @@ export default function Login() {
         localStorage.removeItem("savedLogin");
       }
       
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
+      // Navigation will be handled by useEffect when currentUser changes
       
     } catch (err) {
       setError("Tên đăng nhập hoặc mật khẩu không đúng");
