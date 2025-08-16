@@ -85,9 +85,6 @@ function AppRoutes() {
         } 
       />
       
-      {/* Add more protected routes here */}
-      
-      {/* Redirect unknown routes */}
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );
