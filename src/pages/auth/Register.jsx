@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-
+import useAuth from '@/hooks/useAuth';
 // Components
-import AuthLayout from '../../components/auth/AuthLayout';
-import FormField from '../../components/auth/FormField';
+import AuthLayout from './Layout';
+import FormField from '@/components/auth/FormField';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
