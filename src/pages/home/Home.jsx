@@ -10,7 +10,6 @@ export default function Home() {
     return <div>Loading...</div>;
   }
 
-  // Render different home based on user role
   if (isCustomer) {
     return <CustomerHome />;
   } else {
