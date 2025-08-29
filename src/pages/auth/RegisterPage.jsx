@@ -2,91 +2,100 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuth from '@/hooks/useAuth';
 // Components
-import AuthLayout from './Layout';
+import AuthLayout from './LayoutPage';
 import FormField from '@/components/auth/FormField';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; 
 
 export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   
-  // Restaurant registration form
-  const [restaurantForm, setRestaurantForm] = useState({
-    restaurantName: '',
-    ownerName: '',
+  // Cập nhật form state
+  const [staffForm, setStaffForm] = useState({
+    username: '',
+    firstName: '',
+    lastName: '',
     email: '',
     phone: '',
     address: '',
-    taxCode: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    gender: 'male' // Mặc định
   });
 
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  const handleRestaurantInputChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setRestaurantForm(prev => ({
+    setStaffForm(prev => ({
       ...prev,
       [name]: value
     }));
   };
 
-  const validateRestaurantForm = () => {
-    if (!restaurantForm.restaurantName.trim()) {
-      setError('Vui lòng nhập tên nhà hàng');
+  const handleGenderChange = (value) => {
+    setStaffForm(prev => ({
+      ...prev,
+      gender: value
+    }));
+  };
+
+  const validateForm = () => {
+    if (!staffForm.username.trim()) {
+      setError('Vui lòng nhập tên đăng nhập');
       return false;
     }
     
-    if (!restaurantForm.ownerName.trim()) {
-      setError('Vui lòng nhập tên chủ nhà hàng');
+    if (!staffForm.firstName.trim()) {
+      setError('Vui lòng nhập tên');
       return false;
     }
     
-    if (!restaurantForm.email.trim()) {
+    if (!staffForm.lastName.trim()) {
+      setError('Vui lòng nhập họ');
+      return false;
+    }
+    
+    if (!staffForm.email.trim()) {
       setError('Vui lòng nhập email');
       return false;
     }
     
-    if (!/^\S+@\S+\.\S+$/.test(restaurantForm.email)) {
+    if (!/^\S+@\S+\.\S+$/.test(staffForm.email)) {
       setError('Email không hợp lệ');
       return false;
     }
     
-    if (!restaurantForm.phone.trim()) {
+    if (!staffForm.phone.trim()) {
       setError('Vui lòng nhập số điện thoại');
       return false;
     }
     
-    if (!/^[0-9]{10,11}$/.test(restaurantForm.phone.replace(/\s/g, ''))) {
+    if (!/^[0-9]{10,11}$/.test(staffForm.phone.replace(/\s/g, ''))) {
       setError('Số điện thoại không hợp lệ');
       return false;
     }
     
-    if (!restaurantForm.address.trim()) {
+    if (!staffForm.address.trim()) {
       setError('Vui lòng nhập địa chỉ');
       return false;
     }
     
-    if (!restaurantForm.taxCode.trim()) {
-      setError('Vui lòng nhập mã số thuế');
-      return false;
-    }
-    
-    if (!restaurantForm.password.trim()) {
+    if (!staffForm.password.trim()) {
       setError('Vui lòng nhập mật khẩu');
       return false;
     }
     
-    if (restaurantForm.password.length < 6) {
+    if (staffForm.password.length < 6) {
       setError('Mật khẩu phải có ít nhất 6 ký tự');
       return false;
     }
     
-    if (restaurantForm.password !== restaurantForm.confirmPassword) {
+    if (staffForm.password !== staffForm.confirmPassword) {
       setError('Mật khẩu xác nhận không khớp');
       return false;
     }
@@ -94,9 +103,9 @@ export default function Register() {
     return true;
   };
 
-  const handleRestaurantRegister = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    if (!validateRestaurantForm()) {
+    if (!validateForm()) {
       return;
     }
 
@@ -105,26 +114,29 @@ export default function Register() {
     setSuccess('');
 
     try {
-      // Thay bằng gọi API thực tế nếu có
-      await register(restaurantForm);
+      const response = await register(staffForm);
 
-      setSuccess('Đăng ký thành công! Tài khoản của bạn đang chờ phê duyệt.');
+      if (response?.success) {
+        setSuccess(response.message || 'Đăng ký thành công! Vui lòng đăng nhập.');
 
-      setRestaurantForm({
-        restaurantName: '',
-        ownerName: '',
-        email: '',
-        phone: '',
-        address: '',
-        taxCode: '',
-        password: '',
-        confirmPassword: ''
-      });
+        setStaffForm({
+          username: '',
+          firstName: '',
+          lastName: '',
+          email: '',
+          phone: '',
+          address: '',
+          password: '',
+          confirmPassword: '',
+          gender: 'male'
+        });
 
-      // Chuyển trang sau khi hiện thông báo
-      setTimeout(() => {
-        navigate('/login');
-      }, 3000);
+        setTimeout(() => {
+          navigate('/staff/login');
+        }, 3000);
+      } else {
+        throw new Error('Đăng ký thất bại');
+      }
     } catch (err) {
       setError(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
       console.error("Register error:", err);
@@ -153,57 +165,60 @@ export default function Register() {
         <p className="text-xs text-blue-800 font-medium mb-1">Lưu ý:</p>
         <ul className="text-xs text-blue-700 space-y-1">
           <li>• Tài khoản sẽ được xem xét và phê duyệt trong 24-48 giờ</li>
-          <li>• Khách hàng có thể đặt món trực tiếp mà không cần đăng ký</li>
+          <li>• Sau khi đăng ký, vui lòng tạo nhà hàng của bạn</li>
           <li>• Vui lòng cung cấp thông tin chính xác để tránh delay</li>
         </ul>
-      </div>
-
-      {/* Demo info */}
-      <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-        <p className="text-xs text-gray-600 font-medium mb-2">Demo đăng ký:</p>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-xs">Nhà hàng</Badge>
-            <span className="text-xs text-gray-600">Điền form đầy đủ để đăng ký</span>
-          </div>
-        </div>
       </div>
     </>
   );
 
   return (
     <AuthLayout
-      title="Đăng ký nhà hàng"
+      title="Đăng ký tài khoản Owner"
       subtitle="Đăng ký để trở thành đối tác của chúng tôi"
       error={error}
       success={success}
       footerContent={footerContent}
     >
-      {/* Restaurant registration form */}
-      <form onSubmit={handleRestaurantRegister} className="space-y-4">
+      {/* Staff registration form */}
+      <form onSubmit={handleRegister} className="space-y-4">
         <FormField
-          id="restaurantName"
-          name="restaurantName"
+          id="username"
+          name="username"
           type="text"
-          label="Tên nhà hàng"
-          placeholder="Nhập tên nhà hàng"
-          value={restaurantForm.restaurantName}
-          onChange={handleRestaurantInputChange}
+          label="Tên đăng nhập"
+          placeholder="Nhập tên đăng nhập"
+          value={staffForm.username}
+          onChange={handleInputChange}
           disabled={loading}
           required
         />
 
-        <FormField
-          id="ownerName"
-          name="ownerName"
-          type="text"
-          label="Tên chủ nhà hàng"
-          placeholder="Nhập tên chủ nhà hàng"
-          value={restaurantForm.ownerName}
-          onChange={handleRestaurantInputChange}
-          disabled={loading}
-          required
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            id="firstName"
+            name="firstName"
+            type="text"
+            label="Tên"
+            placeholder="Nhập tên"
+            value={staffForm.firstName}
+            onChange={handleInputChange}
+            disabled={loading}
+            required
+          />
+
+          <FormField
+            id="lastName"
+            name="lastName"
+            type="text"
+            label="Họ"
+            placeholder="Nhập họ"
+            value={staffForm.lastName}
+            onChange={handleInputChange}
+            disabled={loading}
+            required
+          />
+        </div>
 
         <FormField
           id="email"
@@ -211,8 +226,8 @@ export default function Register() {
           type="email"
           label="Email"
           placeholder="Nhập email"
-          value={restaurantForm.email}
-          onChange={handleRestaurantInputChange}
+          value={staffForm.email}
+          onChange={handleInputChange}
           disabled={loading}
           required
         />
@@ -223,8 +238,8 @@ export default function Register() {
           type="tel"
           label="Số điện thoại"
           placeholder="Nhập số điện thoại"
-          value={restaurantForm.phone}
-          onChange={handleRestaurantInputChange}
+          value={staffForm.phone}
+          onChange={handleInputChange}
           disabled={loading}
           required
         />
@@ -234,24 +249,27 @@ export default function Register() {
           name="address"
           type="text"
           label="Địa chỉ"
-          placeholder="Nhập địa chỉ nhà hàng"
-          value={restaurantForm.address}
-          onChange={handleRestaurantInputChange}
+          placeholder="Nhập địa chỉ"
+          value={staffForm.address}
+          onChange={handleInputChange}
           disabled={loading}
           required
         />
 
-        <FormField
-          id="taxCode"
-          name="taxCode"
-          type="text"
-          label="Mã số thuế"
-          placeholder="Nhập mã số thuế"
-          value={restaurantForm.taxCode}
-          onChange={handleRestaurantInputChange}
-          disabled={loading}
-          required
-        />
+        {/* Gender Select */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Giới tính</label>
+          <Select value={staffForm.gender} onValueChange={handleGenderChange} disabled={loading}>
+            <SelectTrigger>
+              <SelectValue placeholder="Chọn giới tính" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="male">Nam</SelectItem>
+              <SelectItem value="female">Nữ</SelectItem>
+              <SelectItem value="other">Khác</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
         <FormField
           id="password"
@@ -259,8 +277,8 @@ export default function Register() {
           type="password"
           label="Mật khẩu"
           placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
-          value={restaurantForm.password}
-          onChange={handleRestaurantInputChange}
+          value={staffForm.password}
+          onChange={handleInputChange}
           disabled={loading}
           required
         />
@@ -271,8 +289,8 @@ export default function Register() {
           type="password"
           label="Xác nhận mật khẩu"
           placeholder="Nhập lại mật khẩu"
-          value={restaurantForm.confirmPassword}
-          onChange={handleRestaurantInputChange}
+          value={staffForm.confirmPassword}
+          onChange={handleInputChange}
           disabled={loading}
           required
         />
@@ -282,7 +300,7 @@ export default function Register() {
           className="w-full"
           disabled={loading}
         >
-          {loading ? "Đang đăng ký..." : "Đăng ký nhà hàng"}
+          {loading ? "Đang đăng ký..." : "Đăng ký tài khoản"}
         </Button>
       </form>
     </AuthLayout>

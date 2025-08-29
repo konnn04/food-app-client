@@ -67,7 +67,7 @@ const fetchApi = async (url, method="GET", data = null, params = null) => {
     });
     return response.data;
   } catch (error) {
-    throw new Error(error.message || 'API request failed');
+    throw new Error(error.response?.data?.message || 'API request failed');
   }
 };
 

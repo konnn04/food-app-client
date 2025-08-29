@@ -5,7 +5,7 @@ import useAuth from "@/hooks/useAuth";
 import HamburgerLoader from "@/components/ui/hamburger-loader";
 
 // Components
-import AuthLayout from "./Layout";
+import AuthLayout from "./LayoutPage";
 import FormField from "@/components/auth/FormField";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

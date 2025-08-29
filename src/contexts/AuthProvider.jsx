@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem("user", JSON.stringify(res.data.customer));
       localStorage.setItem("tokens", JSON.stringify(res.data.tokens));
       return res.data.customer;
-    } 
+    }
     throw new Error("OTP không đúng");
   };
 
@@ -58,18 +58,29 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (staffData) => {
-    setLoading(true);
     try {
+      const payload = {
+        username: staffData.username,
+        password: staffData.password,
+        first_name: staffData.firstName,
+        last_name: staffData.lastName,
+        phone: staffData.phone,
+        email: staffData.email,
+        address: staffData.address,
+        gender: staffData.gender || "male",
+      };
+
       const data = await fetchApi(
         apis.AUTH_API.STAFF_REGISTER,
         "POST",
-        staffData
+        payload
       );
-      return data;
+
+      if (data?.success && data?.data) {
+        return data;
+      }
     } catch (error) {
       throw new Error(error.message || "Đăng ký thất bại");
-    } finally {
-      setLoading(false);
     }
   };
 

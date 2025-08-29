@@ -46,7 +46,7 @@ export default function AuthLayout({
               
             </CardTitle>
             {subtitle && (
-              <p className="text-sm text-gray-600 mt-2">{subtitle}</p>
+              <p className="text-sm text-gray-200 mt-2">{subtitle}</p>
             )}
 
           </CardHeader>

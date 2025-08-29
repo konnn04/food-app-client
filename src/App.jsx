@@ -6,11 +6,12 @@ import AuthProvider from '@/contexts/AuthProvider';
 import AppLayout from '@/components/layout/AppLayout';
 import HamburgerLoader from '@/components/ui/hamburger-loader';
 // Pages
-import LoginCustomer from '@/pages/auth/LoginCustomer';
-import LoginStaff from '@/pages/auth/LoginStaff';
-import Register from '@/pages/auth/Register';
+import LoginCustomer from '@/pages/auth/LoginCustomerPage';
+import LoginStaff from '@/pages/auth/LoginStaffPage';
+import Register from '@/pages/auth/RegisterPage';
 import Home from '@/pages/home/Home';
 import Profile from '@/pages/profile/Profile';
+// import CreateRestaurant from '@/pages/CreateRestaurant'; 
 
 // Loading Component
 function AppLoading() {
@@ -90,6 +91,17 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      
+      {/* <Route 
+        path="/create-restaurant" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <CreateRestaurant />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      /> */}
       
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
