@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import useAuth from '@/hooks/useAuth';
 // Components
@@ -24,14 +24,8 @@ export default function Register() {
     confirmPassword: ''
   });
 
-  const { currentUser } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (currentUser) {
-      navigate('/');
-    }
-  }, [currentUser, navigate]);
 
   const handleRestaurantInputChange = (e) => {
     const { name, value } = e.target;
@@ -102,7 +96,6 @@ export default function Register() {
 
   const handleRestaurantRegister = async (e) => {
     e.preventDefault();
-    
     if (!validateRestaurantForm()) {
       return;
     }
@@ -112,12 +105,11 @@ export default function Register() {
     setSuccess('');
 
     try {
-      // Mock restaurant registration - replace with real API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      // Thay bằng gọi API thực tế nếu có
+      await register(restaurantForm);
+
       setSuccess('Đăng ký thành công! Tài khoản của bạn đang chờ phê duyệt.');
-      
-      // Reset form
+
       setRestaurantForm({
         restaurantName: '',
         ownerName: '',
@@ -128,12 +120,11 @@ export default function Register() {
         password: '',
         confirmPassword: ''
       });
-      
-      // Redirect to login after 3 seconds
+
+      // Chuyển trang sau khi hiện thông báo
       setTimeout(() => {
         navigate('/login');
       }, 3000);
-      
     } catch (err) {
       setError(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
       console.error("Register error:", err);

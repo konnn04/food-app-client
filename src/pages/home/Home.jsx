@@ -1,21 +1,19 @@
-import React from 'react';
-import useAuth from '@/hooks/useAuth';
-import CustomerHome from './CustomerHome';
-import StaffHome from './StaffHome';
+import React from "react";
+import useAuth from "@/hooks/useAuth";
+import CustomerHome from "./CustomerHome";
+import StaffHome from "./StaffHome";
 
 export default function Home() {
-  const { currentUser } = useAuth();
+  const { isCustomer, currentUser } = useAuth();
 
   if (!currentUser) {
     return <div>Loading...</div>;
   }
 
   // Render different home based on user role
-  if (currentUser.role === 'customer') {
+  if (isCustomer) {
     return <CustomerHome />;
-  } else if (currentUser.role === 'staff' || currentUser.role === 'owner') {
+  } else {
     return <StaffHome />;
   }
-
-  return <div>Unknown user role</div>;
 }

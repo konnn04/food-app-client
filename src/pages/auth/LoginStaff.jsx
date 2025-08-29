@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
 
@@ -10,27 +10,19 @@ import FormField from "@/components/auth/FormField";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
 
   const [staffForm, setStaffForm] = useState({
     username: "",
     password: "",
   });
 
-  const { currentUser, staffLogin } = useAuth();
+  const { staffLogin } = useAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (currentUser) {
-      navigate("/");
-    }
-  }, [currentUser, navigate]);
 
   const handleStaffInputChange = (e) => {
     const { name, value } = e.target;
@@ -68,45 +60,20 @@ export default function Login() {
     setSuccess("");
 
     try {
-      await staffLogin({
-        username: staffForm.username,
-        password: staffForm.password,
-      });
-
+      await staffLogin(staffForm.username, staffForm.password);
       setSuccess("Đăng nhập thành công!");
-
-      if (rememberMe) {
-        localStorage.setItem(
-          "savedLogin",
-          JSON.stringify({
-            username: staffForm.username,
-            rememberMe: true,
-          })
-        );
-      } else {
-        localStorage.removeItem("savedLogin");
-      }
+      setTimeout(() => {
+        navigate("/");
+      }, 1000);
     } catch (err) {
       setError("Tên đăng nhập hoặc mật khẩu không đúng");
+      localStorage.removeItem("user");
+      localStorage.removeItem("tokens");
       console.error("Login error:", err);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const savedLogin = localStorage.getItem("savedLogin");
-    if (savedLogin) {
-      const loginData = JSON.parse(savedLogin);
-      if (loginData.rememberMe) {
-        setStaffForm((prev) => ({
-          ...prev,
-          username: loginData.username,
-        }));
-        setRememberMe(true);
-      }
-    }
-  }, []);
 
   const footerContent = (
     <>
@@ -166,20 +133,6 @@ export default function Login() {
           disabled={loading}
           required
         />
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="remember"
-            checked={rememberMe}
-            onCheckedChange={setRememberMe}
-          />
-          <Label
-            htmlFor="remember"
-            className="text-sm font-normal cursor-pointer"
-          >
-            Lưu thông tin đăng nhập
-          </Label>
-        </div>
 
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? (

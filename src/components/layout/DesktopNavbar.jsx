@@ -1,56 +1,53 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import useAuth from '@/hooks/useAuth';
-import logoImg from '@/assets/logo.png';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import ThemeToggle from '@/components/ui/theme-toggle';
-import { 
-  Home, 
-  Clock, 
-  ShoppingCart, 
-  User, 
-  BarChart3, 
-  ClipboardList, 
-  Utensils, 
+import React from "react";
+import { NavLink, useNavigate } from "react-router-dom";
+import useAuth from "@/hooks/useAuth";
+import logoImg from "@/assets/logo.png";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import ThemeToggle from "@/components/ui/theme-toggle";
+import {
+  Home,
+  Clock,
+  ShoppingCart,
+  User,
+  BarChart3,
+  ClipboardList,
+  Utensils,
   Store,
   Bell,
-  LogOut
-} from 'lucide-react';
+  LogOut,
+} from "lucide-react";
 
 export default function DesktopNavbar({ notificationCount = 0 }) {
-  const { currentUser, logout } = useAuth();
+  const { currentUser, logout, isCustomer } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   // Menu items cho từng role
   const getMenuItems = () => {
     if (!currentUser) return [];
 
-    const role = currentUser.role;
-
-    if (role === 'customer') {
+    if (isCustomer) {
       return [
-        { to: '/', icon: Home, label: 'Trang chủ' },
-        { to: '/recent', icon: Clock, label: 'Gần đây' },
-        { to: '/orders', icon: ShoppingCart, label: 'Đơn hàng' },
-        { to: '/profile', icon: User, label: 'Thông tin cá nhân' }
+        { to: "/", icon: Home, label: "Trang chủ" },
+        { to: "/recent", icon: Clock, label: "Gần đây" },
+        { to: "/orders", icon: ShoppingCart, label: "Đơn hàng" },
+        { to: "/profile", icon: User, label: "Thông tin cá nhân" },
       ];
-    } else if (role === 'staff' || role === 'owner') {
+    } else {
       return [
-        { to: '/', icon: BarChart3, label: 'Thống kê' },
-        { to: '/orders', icon: ClipboardList, label: 'Đơn hàng' },
-        { to: '/menu', icon: Utensils, label: 'Quản lý Menu' },
-        { to: '/restaurant', icon: Store, label: 'Quản lý Quán' },
-        { to: '/profile', icon: User, label: 'Thông tin cá nhân' }
+        { to: "/", icon: BarChart3, label: "Thống kê" },
+        { to: "/orders", icon: ClipboardList, label: "Đơn hàng" },
+        { to: "/menu", icon: Utensils, label: "Quản lý Menu" },
+        { to: "/restaurant", icon: Store, label: "Quản lý Quán" },
+        { to: "/profile", icon: User, label: "Thông tin cá nhân" },
       ];
     }
-    return [];
   };
 
   const menuItems = getMenuItems();
@@ -74,8 +71,8 @@ export default function DesktopNavbar({ notificationCount = 0 }) {
               className={({ isActive }) =>
                 `flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                 }`
               }
             >
@@ -95,11 +92,11 @@ export default function DesktopNavbar({ notificationCount = 0 }) {
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
           {notificationCount > 0 && (
-            <Badge 
-              variant="destructive" 
+            <Badge
+              variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs"
             >
-              {notificationCount > 99 ? '99+' : notificationCount}
+              {notificationCount > 99 ? "99+" : notificationCount}
             </Badge>
           )}
         </Button>
@@ -109,12 +106,14 @@ export default function DesktopNavbar({ notificationCount = 0 }) {
           <Avatar className="h-8 w-8">
             <AvatarImage src="/placeholder-avatar.jpg" />
             <AvatarFallback>
-              {currentUser?.name?.charAt(0) || 'U'}
+              {currentUser?.name?.charAt(0) || "U"}
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <span className="text-sm font-medium">{currentUser?.name}</span>
-            <span className="text-xs text-muted-foreground capitalize">{currentUser?.role}</span>
+            <span className="text-xs text-muted-foreground capitalize">
+              {currentUser?.role}
+            </span>
           </div>
         </div>
 

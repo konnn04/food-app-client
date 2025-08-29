@@ -50,7 +50,6 @@ api.interceptors.response.use(
         localStorage.removeItem('tokens');
         localStorage.removeItem('user');
         localStorage.removeItem('userType');
-        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }
