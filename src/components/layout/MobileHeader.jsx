@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 import React from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import logoImg from '../../assets/logo.png';
+import useAuth from '@/hooks/useAuth';
+import logoImg from '@/assets/logo.png';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell } from 'lucide-react';

@@ -1,15 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import AppLayout from './components/layout/AppLayout';
-import HamburgerLoader from './components/ui/hamburger-loader';
-
+import { ThemeProvider } from '@/contexts/ThemeContext';
+import useAuth  from '@/hooks/useAuth';
+import AuthProvider from '@/contexts/AuthProvider';
+import AppLayout from '@/components/layout/AppLayout';
+import HamburgerLoader from '@/components/ui/hamburger-loader';
 // Pages
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import Home from './pages/home/Home';
-import Profile from './pages/profile/Profile';
+import LoginCustomer from '@/pages/auth/LoginCustomerPage';
+import LoginStaff from '@/pages/auth/LoginStaffPage';
+import Register from '@/pages/auth/RegisterPage';
+import Home from '@/pages/home/Home';
+import Profile from '@/pages/profile/Profile';
+// import CreateRestaurant from '@/pages/CreateRestaurant'; 
 
 // Loading Component
 function AppLoading() {
@@ -20,7 +22,13 @@ function AppLoading() {
   );
 }
 
-// Protected Route Components
+function PublicRoute({ children }) {
+  const { currentUser, loading } = useAuth();
+  if (loading) return <AppLoading />;
+  if (currentUser) return <Navigate to="/" replace />;
+  return children;
+}
+
 function ProtectedRoute({ children }) {
   const { currentUser, loading } = useAuth();
   
@@ -28,17 +36,8 @@ function ProtectedRoute({ children }) {
     return <AppLoading />;
   }
   
-  return currentUser ? children : <Navigate to="/login" />;
-}
-
-function PublicRoute({ children }) {
-  const { currentUser, loading } = useAuth();
-  
-  if (loading) {
-    return <AppLoading />;
-  }
-  
-  return !currentUser ? children : <Navigate to="/" />;
+  if (!currentUser) return <Navigate to="/login" replace />;
+  return children;
 }
 
 function AppRoutes() {
@@ -49,7 +48,15 @@ function AppRoutes() {
         path="/login" 
         element={
           <PublicRoute>
-            <Login />
+            <LoginCustomer />
+          </PublicRoute>
+        } 
+      />
+      <Route 
+        path="/staff/login" 
+        element={
+          <PublicRoute>
+            <LoginStaff />
           </PublicRoute>
         } 
       />
@@ -85,10 +92,23 @@ function AppRoutes() {
         } 
       />
       
-      <Route path="*" element={<Navigate to="/login" />} />
+      {/* <Route 
+        path="/create-restaurant" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <CreateRestaurant />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      /> */}
+      
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }
+
+
 
 function App() {
   return (

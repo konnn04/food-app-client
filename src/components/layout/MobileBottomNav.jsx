@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import useAuth from '@/hooks/useAuth';
 import { 
   Home, 
   Clock, 
@@ -13,22 +13,20 @@ import {
 } from 'lucide-react';
 
 export default function MobileBottomNav() {
-  const { currentUser } = useAuth();
+  const { currentUser, isCustomer } = useAuth();
 
   // Menu items cho từng role
   const getMenuItems = () => {
     if (!currentUser) return [];
 
-    const role = currentUser.role;
-
-    if (role === 'customer') {
+    if (isCustomer) {
       return [
         { to: '/', icon: Home, label: 'Trang chủ' },
         { to: '/recent', icon: Clock, label: 'Gần đây' },
         { to: '/orders', icon: ShoppingCart, label: 'Đơn hàng' },
         { to: '/profile', icon: User, label: 'Cá nhân' }
       ];
-    } else if (role === 'staff' || role === 'owner') {
+    } else {
       return [
         { to: '/', icon: BarChart3, label: 'Thống kê' },
         { to: '/orders', icon: ClipboardList, label: 'Đơn hàng' },
@@ -37,7 +35,6 @@ export default function MobileBottomNav() {
         { to: '/profile', icon: User, label: 'Cá nhân' }
       ];
     }
-    return [];
   };
 
   const menuItems = getMenuItems();

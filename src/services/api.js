@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'http://127.0.0.1:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -50,79 +50,25 @@ api.interceptors.response.use(
         localStorage.removeItem('tokens');
         localStorage.removeItem('user');
         localStorage.removeItem('userType');
-        window.location.href = '/login';
         return Promise.reject(refreshError);
       }
     }
-    
     return Promise.reject(error);
   }
 );
 
-// Auth API
-export const authAPI = {
-  // Đăng nhập staff bằng username/password
-  staffLogin: (username, password) => 
-    api.post('/auth/staff/login', { username, password }),
-  
-  // Gửi OTP cho khách hàng
-  sendOTP: (phone) => 
-    api.post('/auth/customer/send-otp', { phone }),
-  
-  // Xác thực OTP
-  verifyOTP: (phone, otp_code) => 
-    api.post('/auth/customer/verify-otp', { phone, otp_code }),
-  
-  // Cập nhật thông tin khách hàng
-  updateCustomerProfile: (data) => 
-    api.post('/auth/customer/update-profile', data),
-  
-  // Lấy thông tin người dùng hiện tại
-  getProfile: () => 
-    api.get('/auth/profile'),
-  
-  // Refresh token
-  refreshToken: () => 
-    api.post('/auth/refresh')
+const fetchApi = async (url, method="GET", data = null, params = null) => {
+  try {
+    const response = await api({
+      url,
+      method,
+      data,
+      params
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'API request failed');
+  }
 };
 
-// Food API
-export const foodAPI = {
-  getAllFoods: (params) => 
-    api.get('/food', { params }),
-  
-  getFoodById: (id) => 
-    api.get(`/food/${id}`),
-  
-  createFood: (data) => 
-    api.post('/food', data)
-};
-
-// Order API
-export const orderAPI = {
-  createOrder: (data) => 
-    api.post('/order', data),
-  
-  getCustomerOrders: (customerId) => 
-    api.get(`/order/customer/${customerId}`),
-  
-  updateOrderStatus: (orderId, status) => 
-    api.put(`/order/${orderId}/status`, { status })
-};
-
-// Admin API
-export const adminAPI = {
-  getDashboardData: () => 
-    api.get('/admin/dashboard'),
-  
-  getUsers: (params) => 
-    api.get('/admin/users', { params }),
-  
-  getCustomers: (params) => 
-    api.get('/admin/customers', { params }),
-  
-  getAllOrders: (params) => 
-    api.get('/admin/orders', { params })
-};
-
-export default api;
+export { fetchApi };
