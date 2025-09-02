@@ -16,14 +16,12 @@ export default function AuthLayout({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-black relative">
-      {/* Background image */}
       <div
         className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat z-0"
         style={{
           backgroundImage: `url(${backgroundImage})`,
         }}
       />
-      {/* Gradient overlay */}
       <div
         className="absolute inset-0 z-10"
         style={{
@@ -32,7 +30,6 @@ export default function AuthLayout({
         }}
       ></div>
 
-      {/* Form container */}
       <div className="relative z-20 w-full max-w-md p-6">
         <div className="flex justify-center mb-4">
           <img src={logoImg} alt="Logo" className="h-16 w-16 object-contain" />

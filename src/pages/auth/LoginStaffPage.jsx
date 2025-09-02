@@ -4,12 +4,9 @@ import useAuth from "@/hooks/useAuth";
 
 import HamburgerLoader from "@/components/ui/hamburger-loader";
 
-// Components
 import AuthLayout from "./LayoutPage";
 import FormField from "@/components/auth/FormField";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
