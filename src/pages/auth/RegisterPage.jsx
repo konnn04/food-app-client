@@ -12,8 +12,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  
-  // Cập nhật form state
+
   const [staffForm, setStaffForm] = useState({
     username: '',
     firstName: '',
@@ -23,7 +22,7 @@ export default function Register() {
     address: '',
     password: '',
     confirmPassword: '',
-    gender: 'male' // Mặc định
+    gender: 'male' 
   });
 
   const { register } = useAuth();
