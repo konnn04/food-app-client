@@ -10,7 +10,14 @@ import LoginCustomer from '@/pages/auth/LoginCustomerPage';
 import LoginStaff from '@/pages/auth/LoginStaffPage';
 import Register from '@/pages/auth/RegisterPage';
 import Home from '@/pages/home/Home';
+import CustomerHome from '@/pages/home/CustomerHome';
+import SearchPage from '@/pages/search/SearchPage';
+import FoodDetailPage from '@/pages/food/FoodDetailPage';
+import CartPage from '@/pages/cart/CartPage';
+import CheckoutPage from '@/pages/cart/CheckoutPage';
 import Profile from '@/pages/profile/Profile';
+import RestaurantDetailPage from '@/pages/restaurant/RestaurantDetailPage';
+import OrdersPage from '@/pages/orders/OrdersPage';
 // import CreateRestaurant from '@/pages/CreateRestaurant'; 
 
 // Loading Component
@@ -75,7 +82,59 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <AppLayout>
-              <Home />
+              <CustomerHome />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/search" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <SearchPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      
+      <Route 
+        path="/food/:id" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <FoodDetailPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/restaurant/:id" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <RestaurantDetailPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/cart" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <CartPage />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/checkout" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <CheckoutPage />
             </AppLayout>
           </ProtectedRoute>
         } 
@@ -87,6 +146,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <AppLayout>
               <Profile />
+            </AppLayout>
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/orders" 
+        element={
+          <ProtectedRoute>
+            <AppLayout>
+              <OrdersPage />
             </AppLayout>
           </ProtectedRoute>
         } 
@@ -107,8 +176,6 @@ function AppRoutes() {
     </Routes>
   );
 }
-
-
 
 function App() {
   return (

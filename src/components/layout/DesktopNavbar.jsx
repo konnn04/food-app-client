@@ -35,17 +35,17 @@ export default function DesktopNavbar({ notificationCount = 0 }) {
     if (isCustomer) {
       return [
         { to: "/", icon: Home, label: "Trang chủ" },
-        { to: "/recent", icon: Clock, label: "Gần đây" },
-        { to: "/orders", icon: ShoppingCart, label: "Đơn hàng" },
-        { to: "/profile", icon: User, label: "Thông tin cá nhân" },
+        { to: "/orders", icon: ClipboardList, label: "Đơn hàng" },
+        { to: "/collections", icon: BarChart3, label: "Bộ sưu tập" },
+        { to: "/profile", icon: User, label: "Cá nhân" },
       ];
     } else {
       return [
-        { to: "/", icon: BarChart3, label: "Thống kê" },
+        { to: "/", icon: BarChart3, label: "Trang chủ" },
+        { to: "/menu", icon: Utensils, label: "Thực đơn" },
         { to: "/orders", icon: ClipboardList, label: "Đơn hàng" },
-        { to: "/menu", icon: Utensils, label: "Quản lý Menu" },
-        { to: "/restaurant", icon: Store, label: "Quản lý Quán" },
-        { to: "/profile", icon: User, label: "Thông tin cá nhân" },
+        { to: "/reviews", icon: Star, label: "Đánh giá" },
+        { to: "/profile", icon: User, label: "Cá nhân" },
       ];
     }
   };
@@ -83,8 +83,15 @@ export default function DesktopNavbar({ notificationCount = 0 }) {
         })}
       </div>
 
-      {/* User Section */}
+      {/* Right Section: Cart + Theme + User */}
       <div className="flex items-center space-x-4">
+        {/* Cart button (compact on desktop) */}
+        <Button variant="ghost" size="icon" onClick={() => navigate('/cart')} className="relative">
+          <ShoppingCart className="h-5 w-5" />
+          {/* Example badge placeholder, wire to cart count if available */}
+          <Badge className="absolute -top-1 -right-1 px-1 h-5 min-w-[1.25rem] flex items-center justify-center" variant="secondary">0</Badge>
+        </Button>
+
         {/* Theme Toggle */}
         <ThemeToggle />
 

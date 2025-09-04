@@ -3,13 +3,13 @@ import { NavLink } from 'react-router-dom';
 import useAuth from '@/hooks/useAuth';
 import { 
   Home, 
-  Clock, 
   ShoppingCart, 
   User, 
   BarChart3, 
   ClipboardList, 
   Utensils, 
-  Store
+  Star,
+  Search
 } from 'lucide-react';
 
 export default function MobileBottomNav() {
@@ -22,16 +22,17 @@ export default function MobileBottomNav() {
     if (isCustomer) {
       return [
         { to: '/', icon: Home, label: 'Trang chủ' },
-        { to: '/recent', icon: Clock, label: 'Gần đây' },
-        { to: '/orders', icon: ShoppingCart, label: 'Đơn hàng' },
+        { to: '/orders', icon: ClipboardList, label: 'Đơn hàng' },
+        { to: '/cart', icon: ShoppingCart, label: 'Giỏ hàng', primary: true },
+        { to: '/collections', icon: BarChart3, label: 'Bộ sưu tập' },
         { to: '/profile', icon: User, label: 'Cá nhân' }
       ];
     } else {
       return [
-        { to: '/', icon: BarChart3, label: 'Thống kê' },
-        { to: '/orders', icon: ClipboardList, label: 'Đơn hàng' },
-        { to: '/menu', icon: Utensils, label: 'Menu' },
-        { to: '/restaurant', icon: Store, label: 'Quán' },
+        { to: '/', icon: BarChart3, label: 'Trang chủ' },
+        { to: '/menu', icon: Utensils, label: 'Thực đơn' },
+        { to: '/orders', icon: ClipboardList, label: 'Đơn hàng', primary: true },
+        { to: '/reviews', icon: Star, label: 'Đánh giá' },
         { to: '/profile', icon: User, label: 'Cá nhân' }
       ];
     }
@@ -53,9 +54,11 @@ export default function MobileBottomNav() {
               to={item.to}
               className={({ isActive }) =>
                 `flex-1 flex flex-col items-center py-2 px-1 transition-colors ${
-                  isActive
-                    ? 'text-primary bg-primary/10'
-                    : 'text-gray-600'
+                  item.primary
+                    ? 'text-white bg-orange-500'
+                    : isActive
+                      ? 'text-primary bg-primary/10'
+                      : 'text-gray-600'
                 }`
               }
             >

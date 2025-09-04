@@ -1,122 +1,303 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Input } from '../../components/ui/input';
+import { Button } from '../../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Badge } from '../../components/ui/badge';
+import { Search, MapPin } from 'lucide-react';
 import FoodCard from '../../components/common/FoodCard';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Search, Filter } from 'lucide-react';
+import LocationSetup from '../../components/common/LocationSetup';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
+import { foodApi } from '../../services/foodApi';
+import { restaurantApi } from '../../services/restaurantApi';
+import { useLocation } from '../../hooks/useLocation';
+import RestaurantCardHorizontal from '../../components/common/RestaurantCardHorizontal';
 
-// Mock data
-const mockFoods = [
-  {
-    id: 1,
-    name: 'Bún bò Huế',
-    description: 'Bún bò Huế đậm đà, cay nồng với thịt bò tươi ngon',
-    price: 45000,
-    image: 'https://konya007.github.io/image-library/food/0.jpg',
-    rating: 4.8,
-    reviews: 124,
-    category: 'Món chính',
-    isAvailable: true
-  },
-  {
-    id: 2,
-    name: 'Phở gà',
-    description: 'Phở gà nóng hổi với nước dàn ngọt, thịt gà mềm',
-    price: 40000,
-    image: 'https://konya007.github.io/image-library/food/1.jpg',
-    rating: 4.6,
-    reviews: 89,
-    category: 'Món chính',
-    isAvailable: true
-  },
-  {
-    id: 3,
-    name: 'Bánh mì pate',
-    description: 'Bánh mì giòn với pate thơm ngon và rau sống',
-    price: 15000,
-    image: 'https://konya007.github.io/image-library/food/2.jpg',
-    rating: 4.3,
-    reviews: 56,
-    category: 'Ăn sáng',
-    isAvailable: false
-  },
-];
+const CustomerHome = () => {
+  const navigate = useNavigate();
+  const [foods, setFoods] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [showLocationSetup, setShowLocationSetup] = useState(false);
+  const { location, getCurrentLocation } = useLocation();
+  const [categories, setCategories] = useState([]);
+  const [restaurants, setRestaurants] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
-const categories = ['Tất cả', 'Món chính', 'Ăn sáng', 'Thức uống', 'Tráng miệng'];
+  // Danh sách từ khóa tìm kiếm phổ biến
+  const popularKeywords = ['Phở', 'Bún', 'Cơm', 'Bánh mì', 'Hủ tiếu', 'Bánh cuốn'];
 
-export default function CustomerHome() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Tất cả');
-  const [cartCount, setCartCount] = useState(0);
+  // Lấy danh sách món ăn
+  const fetchFoods = useCallback(async (page = 1, append = false) => {
+    if (!location) {
+      setShowLocationSetup(true);
+      return;
+    }
 
-  const handleAddToCart = (food) => {
-    setCartCount(prev => prev + 1);
-    console.log('Added to cart:', food);
-    // TODO: Add to cart logic
+    setLoading(true);
+    try {
+      const params = {
+        page,
+        per_page: 10,
+        lat: location.lat,
+        lon: location.lon
+      };
+
+      if (searchQuery) {
+        params.q = searchQuery;
+      }
+
+      if (selectedCategoryId) {
+        params.category = selectedCategoryId;
+      }
+
+      const response = await foodApi.getFoods(params);
+      
+      if (response.success) {
+        const newFoods = response.data.items;
+        if (append) {
+          setFoods(prev => [...prev, ...newFoods]);
+        } else {
+          setFoods(newFoods);
+        }
+        
+        setHasMore(page < response.data.meta.total_pages);
+        setCurrentPage(page);
+      }
+    } catch (error) {
+      console.error('Error fetching foods:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [location, searchQuery, selectedCategoryId]);
+
+  // Load more khi scroll
+  const handleScroll = useCallback(() => {
+    if (loading || !hasMore) return;
+    
+    const scrollTop = window.scrollY;
+    const windowHeight = window.innerHeight;
+    const documentHeight = document.documentElement.scrollHeight;
+    
+    if (scrollTop + windowHeight >= documentHeight - 100) {
+      fetchFoods(currentPage + 1, true);
+    }
+  }, [loading, hasMore, currentPage, fetchFoods]);
+
+  // Tìm kiếm
+  const handleSearch = () => {
+    if (searchQuery && searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    } else {
+      navigate('/search');
+    }
   };
 
-  const filteredFoods = mockFoods.filter(food => {
-    const matchesSearch = food.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         food.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'Tất cả' || food.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Tìm kiếm theo từ khóa
+  const handleKeywordSearch = (keyword) => {
+    setSearchQuery(keyword);
+    setCurrentPage(1);
+    setHasMore(true);
+    fetchFoods(1, false);
+  };
+
+  // Xử lý khi location được set
+  const handleLocationSet = (newLocation) => {
+    setShowLocationSetup(false);
+    fetchFoods(1, false);
+  };
+
+  // Xử lý click vào món ăn
+  const handleFoodClick = (food) => {
+    navigate(`/food/${food.id}`);
+  };
+
+  useEffect(() => {
+    if (location) {
+      fetchFoods(1, false);
+      // Fetch categories
+      foodApi.getCategories().then((res) => {
+        if (res?.success && Array.isArray(res.data)) {
+          setCategories(res.data);
+        }
+      }).catch(() => {});
+      // Fetch popular restaurants
+      restaurantApi.getPublicRestaurants({ page: 1, per_page: 10, lat: location.lat, lon: location.lon }).then((res) => {
+        const items = res?.data?.items || [];
+        setRestaurants(items);
+      }).catch(() => {});
+    }
+  }, [location]);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
+
+  const handleCancelLocation = () => setShowLocationSetup(false);
 
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Welcome Section */}
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl md:text-3xl font-bold">Chào mừng đến với FoodApp</h1>
-        <p className="text-gray-600">Khám phá những món ăn ngon nhất trong khu vực</p>
+    <div className="min-h-screen bg-background">
+      <Dialog open={showLocationSetup} onOpenChange={setShowLocationSetup}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Thiết lập địa chỉ</DialogTitle>
+          </DialogHeader>
+          <LocationSetup onLocationSet={handleLocationSet} onCancel={handleCancelLocation} />
+        </DialogContent>
+      </Dialog>
+      {/* Header */}
+      <div className="bg-card border-b sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Input
+                  placeholder="Tìm kiếm món ăn..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                  className="pr-10"
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSearch}
+                  className="absolute right-1 top-1"
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setShowLocationSetup(true)}
+              className="flex items-center gap-2"
+            >
+              <MapPin className="h-4 w-4" />
+              Địa chỉ
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-        <Input
-          type="text"
-          placeholder="Tìm kiếm món ăn..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 pr-4"
-        />
+      {/* Location box */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <Card>
+          <CardContent className="py-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <MapPin className="h-5 w-5 text-primary" />
+              <div>
+                <div className="text-sm text-muted-foreground">Địa chỉ hiện tại</div>
+                <div className="text-sm font-medium">
+                  {location ? (location.address || `${location.lat.toFixed(5)}, ${location.lon.toFixed(5)}`) : 'Chưa thiết lập' }
+                </div>
+              </div>
+            </div>
+            <Button variant="secondary" onClick={() => setShowLocationSetup(true)}>Cập nhật</Button>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Category Filters */}
-      <div className="flex items-center space-x-2 overflow-x-auto pb-2">
-        <Button variant="ghost" size="sm" className="shrink-0">
-          <Filter className="h-4 w-4 mr-1" />
-          Lọc
-        </Button>
-        {categories.map((category) => (
-          <Badge
-            key={category}
-            variant={selectedCategory === category ? "default" : "outline"}
-            className="cursor-pointer shrink-0"
-            onClick={() => setSelectedCategory(category)}
-          >
-            {category}
-          </Badge>
-        ))}
+      {/* Categories */}
+      <div className="max-w-7xl mx-auto px-4">
+        {categories.length > 0 && (
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-base font-semibold">Danh mục</h3>
+          </div>
+        )}
+        {categories.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <Badge
+              key="all"
+              variant={selectedCategoryId ? 'secondary' : 'default'}
+              className="whitespace-nowrap cursor-pointer"
+              onClick={() => setSelectedCategoryId(null)}
+            >
+              Tất cả
+            </Badge>
+            {categories.map((c) => (
+              <Badge
+                key={c.id}
+                variant={selectedCategoryId === c.id ? 'default' : 'secondary'}
+                className="whitespace-nowrap cursor-pointer"
+                onClick={() => navigate(`/search?q=${encodeURIComponent(c.name)}`)}
+              >
+                {c.name}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Popular Restaurants */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        {restaurants.length > 0 && (
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-base font-semibold">Quán nổi tiếng gần bạn</h3>
+          </div>
+        )}
+        {restaurants.length > 0 && (
+          <div className="space-y-3">
+            {restaurants.map((r) => (
+              <RestaurantCardHorizontal key={r.id} restaurant={r} onClick={() => navigate(`/restaurant/${r.id}`)} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Popular Keywords */}
+      <div className="max-w-7xl mx-auto px-4 py-4">
+        <div className="flex flex-wrap gap-2">
+          {popularKeywords.map((keyword) => (
+            <Badge
+              key={keyword}
+              variant="secondary"
+              className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+              onClick={() => handleKeywordSearch(keyword)}
+            >
+              {keyword}
+            </Badge>
+          ))}
+        </div>
       </div>
 
       {/* Food Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredFoods.map((food) => (
-          <FoodCard
-            key={food.id}
-            food={food}
-            onAddToCart={handleAddToCart}
-          />
-        ))}
-      </div>
+      <div className="max-w-7xl mx-auto px-4 pb-8">
+        {foods.length > 0 ? (
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {foods.map((food) => (
+              <FoodCard
+                key={food.id}
+                food={food}
+                onClick={handleFoodClick}
+                showAddButton={true}
+              />
+            ))}
+          </div>
+        ) : !loading ? (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Không tìm thấy món ăn nào</p>
+          </div>
+        ) : null}
 
-      {/* Empty State */}
-      {filteredFoods.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-gray-500">Không tìm thấy món ăn nào</p>
-        </div>
-      )}
+        {/* Loading indicator */}
+        {loading && (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        )}
+
+        {/* No more data */}
+        {!hasMore && foods.length > 0 && (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Đã hiển thị tất cả món ăn</p>
+          </div>
+        )}
+      </div>
     </div>
   );
-}
+};
+
+export default CustomerHome;
