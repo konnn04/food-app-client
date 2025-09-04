@@ -3,7 +3,6 @@ import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 
-
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: {
@@ -28,7 +27,6 @@ export default defineConfig({
     }
   },
   server: {
-    allowedHosts: ['.localhost', '.yourdomain.com'],
     port: 3000,
     host: true
   },

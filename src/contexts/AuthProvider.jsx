@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import apis from "@/configs/apis";
-import { fetchApi } from "@/services/api";
+import { authApi } from "@/services/authApi";
 import { AuthContext } from "@/contexts/AuthContext";
 
 export function AuthProvider({ children }) {
@@ -18,9 +17,7 @@ export function AuthProvider({ children }) {
 
   const sendOTP = async (phone) => {
     try {
-      const data = await fetchApi(apis.AUTH_API.CUSTOMER_GET_OTP, "POST", {
-        phone,
-      });
+      const data = await authApi.sendCustomerOTP(phone);
       return data;
     } catch (error) {
       throw new Error(error.message || "Không thể gửi OTP");
@@ -28,33 +25,35 @@ export function AuthProvider({ children }) {
   };
 
   const customerLogin = async (phone, otp_code) => {
-    const res = await fetchApi("/auth/customer/verify-otp", "POST", {
-      phone,
-      otp_code,
-    });
-    if (res?.data?.customer && res.data.tokens) {
-      setCurrentUser(res.data.customer);
-      setIsCustomer(true);
-      localStorage.setItem("user", JSON.stringify(res.data.customer));
-      localStorage.setItem("tokens", JSON.stringify(res.data.tokens));
-      return res.data.customer;
+    try {
+      const res = await authApi.verifyCustomerOTP(phone, otp_code);
+      if (res?.data?.customer && res.data.tokens) {
+        setCurrentUser(res.data.customer);
+        setIsCustomer(true);
+        localStorage.setItem("user", JSON.stringify(res.data.customer));
+        localStorage.setItem("tokens", JSON.stringify(res.data.tokens));
+        return res.data.customer;
+      }
+      throw new Error("OTP không đúng");
+    } catch (error) {
+      throw new Error(error.message || "Đăng nhập thất bại");
     }
-    throw new Error("OTP không đúng");
   };
 
-  const staffLogin = async (username, password) => {
-    const res = await fetchApi(apis.AUTH_API.STAFF_LOGIN, "POST", {
-      username,
-      password,
-    });
-    if (res?.data?.user && res.data?.tokens) {
-      setCurrentUser(res.data.user);
-      setIsCustomer(false);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("tokens", JSON.stringify(res.data.tokens));
-      return res.data.user;
+  const staffLogin = async (email, password) => {
+    try {
+      const res = await authApi.staffLogin(email, password);
+      if (res?.data?.user && res.data?.tokens) {
+        setCurrentUser(res.data.user);
+        setIsCustomer(false);
+        localStorage.setItem("user", JSON.stringify(res.data.user));
+        localStorage.setItem("tokens", JSON.stringify(res.data.tokens));
+        return res.data.user;
+      }
+      throw new Error("Đăng nhập thất bại");
+    } catch (error) {
+      throw new Error(error.message || "Đăng nhập thất bại");
     }
-    throw new Error("Đăng nhập thất bại");
   };
 
   const register = async (staffData) => {
@@ -70,11 +69,7 @@ export function AuthProvider({ children }) {
         gender: staffData.gender || "male",
       };
 
-      const data = await fetchApi(
-        apis.AUTH_API.STAFF_REGISTER,
-        "POST",
-        payload
-      );
+      const data = await authApi.staffRegister(payload);
 
       if (data?.success && data?.data) {
         return data;

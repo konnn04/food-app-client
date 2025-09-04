@@ -1,12 +1,13 @@
 import axios from 'axios';
 
-const API_URL = 'http://127.0.0.1:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://flask.konnn04.live';
 
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000,
 });
 
 api.interceptors.request.use(
@@ -33,19 +34,23 @@ api.interceptors.response.use(
         if (!tokens || !tokens.refresh_token) {
           throw new Error('No refresh token available');
         }
-        
-        const response = await axios.post(`${API_URL}/auth/refresh`, {}, {
+        // avoid recursive refresh
+        if (originalRequest.url?.includes('/api/auth/refresh/')) {
+          throw new Error('Cannot refresh');
+        }
+
+        const response = await api.post('/api/auth/refresh/', null, {
           headers: {
-            'Authorization': `Bearer ${tokens.refresh_token}`
-          }
+            Authorization: `Bearer ${tokens.refresh_token}`,
+          },
         });
         
-        const { access_token } = response.data.data;
+        const { access_token } = response.data.data || response.data;
         const newTokens = { ...tokens, access_token };
         localStorage.setItem('tokens', JSON.stringify(newTokens));
         
         originalRequest.headers.Authorization = `Bearer ${access_token}`;
-        return axios(originalRequest);
+        return api(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem('tokens');
         localStorage.removeItem('user');
@@ -57,18 +62,25 @@ api.interceptors.response.use(
   }
 );
 
-const fetchApi = async (url, method="GET", data = null, params = null) => {
+const fetchApi = async (url, method = 'GET', data = null, params = null, config = {}) => {
   try {
     const response = await api({
       url,
       method,
       data,
-      params
+      params,
+      ...config,
     });
     return response.data;
   } catch (error) {
-    throw new Error(error.response?.data?.message || 'API request failed');
+    if (error.response) {
+      throw new Error(error.response.data?.message || `HTTP ${error.response.status}`);
+    } else if (error.request) {
+      throw new Error('Không thể kết nối đến server');
+    } else {
+      throw new Error(error.message || 'API request failed');
+    }
   }
 };
 
-export { fetchApi };
+export { fetchApi, api };
