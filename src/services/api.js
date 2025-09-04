@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://flask.konnn04.live';
+const API_URL = import.meta.env.VITE_API_URL || 'https://food-app-server-production.up.railway.app';
 
 const api = axios.create({
   baseURL: API_URL,
