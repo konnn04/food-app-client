@@ -9,9 +9,9 @@ import FoodCard from '../../components/common/FoodCard';
 import LocationSetup from '../../components/common/LocationSetup';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { foodApi } from '../../services/foodApi';
-import { restaurantApi } from '../../services/restaurantApi';
+// import { restaurantApi } from '../../services/restaurantApi';
 import { useLocation } from '../../hooks/useLocation';
-import RestaurantCardHorizontal from '../../components/common/RestaurantCardHorizontal';
+// import RestaurantCardHorizontal from '../../components/common/RestaurantCardHorizontal';
 
 const CustomerHome = () => {
   const navigate = useNavigate();
@@ -21,15 +21,13 @@ const CustomerHome = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [showLocationSetup, setShowLocationSetup] = useState(false);
-  const { location, getCurrentLocation } = useLocation();
+  const { location } = useLocation();
   const [categories, setCategories] = useState([]);
-  const [restaurants, setRestaurants] = useState([]);
+  const [, setRestaurants] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
-  // Danh sách từ khóa tìm kiếm phổ biến
   const popularKeywords = ['Phở', 'Bún', 'Cơm', 'Bánh mì', 'Hủ tiếu', 'Bánh cuốn'];
 
-  // Lấy danh sách món ăn
   const fetchFoods = useCallback(async (page = 1, append = false) => {
     if (!location) {
       setShowLocationSetup(true);
@@ -42,7 +40,7 @@ const CustomerHome = () => {
         page,
         per_page: 10,
         lat: location.lat,
-        lon: location.lon
+        lon: location.lon,
       };
 
       if (searchQuery) {
@@ -73,7 +71,6 @@ const CustomerHome = () => {
     }
   }, [location, searchQuery, selectedCategoryId]);
 
-  // Load more khi scroll
   const handleScroll = useCallback(() => {
     if (loading || !hasMore) return;
     
@@ -86,7 +83,6 @@ const CustomerHome = () => {
     }
   }, [loading, hasMore, currentPage, fetchFoods]);
 
-  // Tìm kiếm
   const handleSearch = () => {
     if (searchQuery && searchQuery.trim()) {
       navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
@@ -123,13 +119,14 @@ const CustomerHome = () => {
           setCategories(res.data);
         }
       }).catch(() => {});
-      // Fetch popular restaurants
-      restaurantApi.getPublicRestaurants({ page: 1, per_page: 10, lat: location.lat, lon: location.lon }).then((res) => {
-        const items = res?.data?.items || [];
-        setRestaurants(items);
-      }).catch(() => {});
+      // Temporarily hide restaurants per request
+      setRestaurants([]);
+      // restaurantApi.getPublicRestaurants({ page: 1, per_page: 10, lat: location.lat, lon: location.lon }).then((res) => {
+      //   const items = res?.data?.items || [];
+      //   setRestaurants(items);
+      // }).catch(() => {});
     }
-  }, [location]);
+  }, [fetchFoods, location]);
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
@@ -204,7 +201,7 @@ const CustomerHome = () => {
       <div className="max-w-7xl mx-auto px-4">
         {categories.length > 0 && (
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-base font-semibold">Danh mục</h3>
+            <h3 className="text/base font-semibold">Danh mục</h3>
           </div>
         )}
         {categories.length > 0 && (
@@ -231,8 +228,8 @@ const CustomerHome = () => {
         )}
       </div>
 
-      {/* Popular Restaurants */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      {/* Popular Restaurants - hidden */}
+      {/* <div className="max-w-7xl mx-auto px-4 py-4">
         {restaurants.length > 0 && (
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-base font-semibold">Quán nổi tiếng gần bạn</h3>
@@ -245,7 +242,7 @@ const CustomerHome = () => {
             ))}
           </div>
         )}
-      </div>
+      </div> */}
 
       {/* Popular Keywords */}
       <div className="max-w-7xl mx-auto px-4 py-4">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { authApi } from "@/services/authApi";
 import { AuthContext } from "@/contexts/AuthContext";
 
@@ -10,21 +10,25 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
-      setCurrentUser(JSON.parse(savedUser));
+      const parsed = JSON.parse(savedUser);
+      setCurrentUser(parsed);
+      const role = parsed?.role;
+      const isStaffOrOwner = role === 'staff' || role === 'owner';
+      setIsCustomer(!isStaffOrOwner);
     }
     setLoading(false);
   }, []);
 
-  const sendOTP = async (phone) => {
+  const sendOTP = useCallback(async (phone) => {
     try {
       const data = await authApi.sendCustomerOTP(phone);
       return data;
     } catch (error) {
       throw new Error(error.message || "Không thể gửi OTP");
     }
-  };
+  }, []);
 
-  const customerLogin = async (phone, otp_code) => {
+  const customerLogin = useCallback(async (phone, otp_code) => {
     try {
       const res = await authApi.verifyCustomerOTP(phone, otp_code);
       if (res?.data?.customer && res.data.tokens) {
@@ -38,9 +42,9 @@ export function AuthProvider({ children }) {
     } catch (error) {
       throw new Error(error.message || "Đăng nhập thất bại");
     }
-  };
+  }, []);
 
-  const staffLogin = async (email, password) => {
+  const staffLogin = useCallback(async (email, password) => {
     try {
       const res = await authApi.staffLogin(email, password);
       if (res?.data?.user && res.data?.tokens) {
@@ -54,9 +58,9 @@ export function AuthProvider({ children }) {
     } catch (error) {
       throw new Error(error.message || "Đăng nhập thất bại");
     }
-  };
+  }, []);
 
-  const register = async (staffData) => {
+  const register = useCallback(async (staffData) => {
     try {
       const payload = {
         username: staffData.username,
@@ -77,20 +81,20 @@ export function AuthProvider({ children }) {
     } catch (error) {
       throw new Error(error.message || "Đăng ký thất bại");
     }
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("user");
     localStorage.removeItem("tokens");
     setIsCustomer(true);
     setCurrentUser(null);
-  };
+  }, []);
 
-  const isStaff = currentUser?.role === "staff";
-  const isOwner = currentUser?.role === "owner";
-  const isAuthenticated = !!currentUser;
+  const isStaff = useMemo(() => currentUser?.role === "owner" || currentUser?.role === "admin", [currentUser]);
+  const isOwner = useMemo(() => currentUser?.role === "owner", [currentUser]);
+  const isAuthenticated = useMemo(() => !!currentUser, [currentUser]);
 
-  const value = {
+  const value = useMemo(() => ({
     currentUser,
     loading,
     customerLogin,
@@ -102,7 +106,7 @@ export function AuthProvider({ children }) {
     isStaff,
     isOwner,
     isAuthenticated,
-  };
+  }), [currentUser, loading, customerLogin, logout, register, sendOTP, staffLogin, isCustomer, isStaff, isOwner, isAuthenticated]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

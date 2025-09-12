@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,8 @@ export default function FoodCard({
   food, 
   onAddToCart, 
   showAddButton = true,
-  onClick
+  onClick,
+  className = ''
 }) {
   const {
     id,
@@ -35,7 +37,7 @@ export default function FoodCard({
 
   return (
     <Card 
-      className={`overflow-hidden cursor-pointer hover:shadow-lg transition-shadow ${!available ? 'opacity-60' : ''}`}
+      className={`overflow-hidden cursor-pointer hover:shadow-lg transition-shadow p-2 gap-2 ${!available ? 'opacity-60' : ''} ${className}`}
       onClick={() => onClick && onClick(food)}
     >
       {/* Food Image */}
@@ -43,7 +45,7 @@ export default function FoodCard({
         <img 
           src={image_url || '/placeholder-food.jpg'} 
           alt={name}
-          className="w-full h-48 object-cover"
+          className="aspect-square w-full object-cover rounded"
         />
         {categories.length > 0 && (
           <Badge className="absolute top-2 left-2">
@@ -57,20 +59,10 @@ export default function FoodCard({
         )}
       </div>
 
-      <CardContent className="p-4">
+      <CardContent className="p-2">
         {/* Food Info */}
         <div className="space-y-2">
           <h3 className="font-semibold text-lg line-clamp-1">{name}</h3>
-          {/* <p className="text-gray-600 text-sm line-clamp-2">{description}</p> */}
-          
-          {/* Restaurant Info */}
-          {restaurant && (
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
-              <MapPin className="h-3 w-3" />
-              <span className="line-clamp-1">{restaurant.name}</span>
-            </div>
-          )}
-
           {/* Distance */}
           {distance_km && (
             <div className="text-sm text-gray-500">
@@ -93,7 +85,6 @@ export default function FoodCard({
                 className="ml-2"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Thêm
               </Button>
             )}
           </div>

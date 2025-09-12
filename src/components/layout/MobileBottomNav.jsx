@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import useAuth from '@/hooks/useAuth';
+import { cartApi } from '@/services/cartApi';
+import { Badge } from '@/components/ui/badge';
 import { 
   Home, 
   ShoppingCart, 
@@ -14,6 +16,35 @@ import {
 
 export default function MobileBottomNav() {
   const { currentUser, isCustomer } = useAuth();
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      if (!isCustomer) {
+        setCartCount(0);
+        return;
+      }
+      try {
+        const res = await cartApi.getCart();
+        const count = res?.data?.items?.length || 0;
+        setCartCount(count);
+      } catch (_) {
+        setCartCount(0);
+      }
+    };
+    fetchCartCount();
+  }, [isCustomer]);
+
+  useEffect(() => {
+    const handler = () => {
+      if (!isCustomer) return;
+      cartApi.getCart().then((res) => {
+        setCartCount(res?.data?.items?.length || 0);
+      }).catch(() => setCartCount(0));
+    };
+    window.addEventListener('cartUpdated', handler);
+    return () => window.removeEventListener('cartUpdated', handler);
+  }, [isCustomer]);
 
   // Menu items cho từng role
   const getMenuItems = () => {
@@ -30,9 +61,9 @@ export default function MobileBottomNav() {
     } else {
       return [
         { to: '/', icon: BarChart3, label: 'Trang chủ' },
-        { to: '/menu', icon: Utensils, label: 'Thực đơn' },
+        { to: '/staff/menu', icon: Utensils, label: 'Thực đơn' },
         { to: '/orders', icon: ClipboardList, label: 'Đơn hàng', primary: true },
-        { to: '/reviews', icon: Star, label: 'Đánh giá' },
+        { to: '/staff/reviews', icon: Star, label: 'Đánh giá' },
         { to: '/profile', icon: User, label: 'Cá nhân' }
       ];
     }
@@ -53,7 +84,7 @@ export default function MobileBottomNav() {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex-1 flex flex-col items-center py-2 px-1 transition-colors ${
+                `relative flex-1 flex flex-col items-center py-2 px-1 transition-colors ${
                   item.primary
                     ? 'text-white bg-orange-500'
                     : isActive
@@ -63,6 +94,11 @@ export default function MobileBottomNav() {
               }
             >
               <Icon className="h-6 w-6 mb-1" />
+              {item.to === '/cart' && isCustomer && cartCount > 0 && (
+                <Badge className="absolute top-1 right-4 h-4 px-1 text-[10px]" variant="destructive">
+                  {cartCount > 99 ? '99+' : cartCount}
+                </Badge>
+              )}
               <span className="text-xs font-medium">{item.label}</span>
             </NavLink>
           );
