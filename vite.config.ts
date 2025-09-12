@@ -27,6 +27,7 @@ export default defineConfig({
     }
   },
   server: {
+    allowedHosts: ['www.konnn04.live'],
     port: 3000,
     host: true
   },

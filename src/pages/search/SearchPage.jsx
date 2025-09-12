@@ -1,18 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '../../components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Slider } from '../../components/ui/slider';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { Search, Filter, MapPin, SortAsc, SortDesc } from 'lucide-react';
-import FoodCard from '../../components/common/FoodCard';
-import RestaurantCardHorizontal from '../../components/common/RestaurantCardHorizontal';
-import InfiniteScroller from '../../components/common/InfiniteScroller';
-import { searchApi } from '../../services/searchApi';
-import { useLocation } from '../../hooks/useLocation';
-import { usePageCache } from '../../hooks/usePageCache';
+import FoodCard from '@/components/common/FoodCard';
+import RestaurantCardHorizontal from '@/components/common/RestaurantCardHorizontal';
+import InfiniteScroller from '@/components/common/InfiniteScroller';
+import { searchApi } from '@/services/searchApi';
+import { useLocation } from '@/hooks/useLocation';
+import { usePageCache } from '@/hooks/usePageCache';
+import { useDebounce, useDebouncedCallback } from '@/hooks/useDebounce';
 
 const SearchPage = () => {
   usePageCache('search');
@@ -27,94 +28,73 @@ const SearchPage = () => {
 
   // Search and filter states
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const debouncedQuery = useDebounce(searchQuery, 500);
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'distance');
   const [priceRange, setPriceRange] = useState([0, 100000]);
   const [selectedCategories, setSelectedCategories] = useState([]);
 
-  // Categories from API response
-  const allCategories = [
-    'Đồ ăn vặt', 'Món chính', 'Tráng miệng', 'Món ăn nhanh', 
-    'Món ăn đường phố', 'Mì'
-  ];
+  // Avoid duplicate calls
+  const isFetchingRef = useRef(false);
+  const lastParamsRef = useRef('');
 
-  // Sort options
-  const sortOptions = [
-    { value: 'distance', label: 'Gần nhất' },
-    { value: 'price', label: 'Giá' },
-  ];
-
-  // Lấy danh sách món ăn
+  // Lấy danh sách món ăn (đã tối ưu hạn chế gọi trùng)
   const fetchFoods = useCallback(async (page = 1, append = false) => {
+    if (isFetchingRef.current) return;
+    const params = { page, per_page: 10 };
+    if (location && typeof location.lat === 'number' && typeof location.lon === 'number') {
+      params.lat = location.lat;
+      params.lon = location.lon;
+    }
+    if (debouncedQuery) {
+      params.q = debouncedQuery;
+    }
+    if (sortBy) {
+      params.sort_by = sortBy;
+      params.sort_order = 'asc';
+    }
+    if (priceRange[0] > 0) params.min_price = priceRange[0];
+    if (priceRange[1] < 100000) params.max_price = priceRange[1];
+    if (selectedCategories.length > 0) params.categories = selectedCategories.join(',');
 
+    const paramsKey = JSON.stringify(params);
+    if (!append && paramsKey === lastParamsRef.current) return;
 
+    isFetchingRef.current = true;
     setLoading(true);
     try {
-      const params = {
-        page,
-        per_page: 10,
-      };
-
-      if (location && typeof location.lat === 'number' && typeof location.lon === 'number') {
-        params.lat = location.lat;
-        params.lon = location.lon;
-      }
-
-      if (searchQuery) {
-        params.q = searchQuery;
-      }
-
-      if (sortBy) {
-        params.sort_by = sortBy;
-        params.sort_order = 'asc';
-      }
-
-      if (priceRange[0] > 0) {
-        params.min_price = priceRange[0];
-      }
-      if (priceRange[1] < 100000) {
-        params.max_price = priceRange[1];
-      }
-
-      if (selectedCategories.length > 0) {
-        params.categories = selectedCategories.join(',');
-      }
-
       const response = await searchApi.search(params);
-      
       if (response.success) {
         const restaurants = response.data.items || [];
         setResults(prev => (append ? [...prev, ...restaurants] : restaurants));
         const totalPages = response.data.pages || response.data.pagination?.total_pages || 1;
         setHasMore(page < totalPages);
         setCurrentPage(page);
+        lastParamsRef.current = paramsKey;
       }
     } catch (error) {
       console.error('Error fetching foods:', error);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
-  }, [location, searchQuery, sortBy, priceRange, selectedCategories, navigate]);
-
-  // Load more khi scroll
-  const handleScroll = useCallback(() => {
-    if (loading || !hasMore) return;
-    
-    const scrollTop = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-    
-    if (scrollTop + windowHeight >= documentHeight - 100) {
-      fetchFoods(currentPage + 1, true);
-    }
-  }, [loading, hasMore, currentPage, fetchFoods]);
+  }, [location, debouncedQuery, sortBy, priceRange, selectedCategories]);
 
   // Tìm kiếm
-  const handleSearch = () => {
-    setSearchParams({ q: searchQuery });
+  const doSearch = useCallback(() => {
+    setSearchParams({ q: debouncedQuery || '' });
     setCurrentPage(1);
     setHasMore(true);
     fetchFoods(1, false);
-  };
+  }, [debouncedQuery, setSearchParams, fetchFoods]);
+
+  // Trigger search when debounced query changes
+  useEffect(() => {
+    if (debouncedQuery !== null) {
+      doSearch();
+    }
+  }, [debouncedQuery, doSearch]);
+
+  const handleSearch = () => doSearch();
 
   // Xử lý filter
   const handleFilterChange = () => {
@@ -122,6 +102,9 @@ const SearchPage = () => {
     setHasMore(true);
     fetchFoods(1, false);
   };
+
+  // Debounce filter changes
+  useDebouncedCallback(() => handleFilterChange(), 400, [sortBy, priceRange, selectedCategories]);
 
   // Xử lý category toggle
   const toggleCategory = (category) => {
@@ -144,18 +127,10 @@ const SearchPage = () => {
 
   useEffect(() => {
     if (location) {
+      lastParamsRef.current = '';
       fetchFoods(1, false);
     }
-  }, [location]);
-
-  useEffect(() => {
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [handleScroll]);
-
-  useEffect(() => {
-    handleFilterChange();
-  }, [sortBy, priceRange, selectedCategories]);
+  }, [location, fetchFoods]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -206,9 +181,9 @@ const SearchPage = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {sortOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
+                    {['distance','price'].map((value) => (
+                      <SelectItem key={value} value={value}>
+                        {value === 'distance' ? 'Gần nhất' : 'Giá'}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -233,7 +208,7 @@ const SearchPage = () => {
               <div>
                 <label className="text-sm font-medium mb-2 block">Danh mục</label>
                 <div className="flex flex-wrap gap-1">
-                  {allCategories.map((category) => (
+                  {['Đồ ăn vặt','Món chính','Tráng miệng','Món ăn nhanh','Món ăn đường phố','Mì'].map((category) => (
                     <Badge
                       key={category}
                       variant={selectedCategories.includes(category) ? "default" : "outline"}
@@ -267,9 +242,10 @@ const SearchPage = () => {
                 <div className="p-4">
                   <RestaurantCardHorizontal restaurant={r} onClick={() => navigate(`/restaurant/${r.id}`)} />
                 </div>
-                <div className="px-4 pb-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="px-4 pb-4 space-y-3 overflow-x-auto flex gap-4">
                   {(r.searched_foods || []).map((food) => (
                     <FoodCard
+                      className="min-w-[150px] max-w-[150px] flex-shrink-0"
                       key={`${r.id}-${food.id}`}
                       food={{ ...food, restaurant: r }}
                       onClick={handleFoodClick}

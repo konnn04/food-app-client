@@ -101,7 +101,7 @@ export default function Login() {
 
   return (
     <AuthLayout
-      title="Đăng nhập"
+      title="Đăng nhập Chủ quán"
       error={error}
       success={success}
       footerContent={footerContent}

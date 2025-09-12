@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import useAuth from "@/hooks/useAuth";
+import { cartApi } from "@/services/cartApi";
 import logoImg from "@/assets/logo.png";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,20 +9,60 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "@/components/ui/theme-toggle";
 import {
   Home,
-  Clock,
   ShoppingCart,
   User,
   BarChart3,
   ClipboardList,
   Utensils,
-  Store,
   Bell,
   LogOut,
+  Star,
 } from "lucide-react";
 
 export default function DesktopNavbar({ notificationCount = 0 }) {
   const { currentUser, logout, isCustomer } = useAuth();
   const navigate = useNavigate();
+  const [cartCount, setCartCount] = useState(0);
+
+  // Fetch cart count
+  useEffect(() => {
+    if (isCustomer) {
+      const fetchCartCount = async () => {
+        try {
+          const res = await cartApi.getCart();
+          const count = res?.data?.items?.length || 0;
+          setCartCount(count);
+        } catch (e) {
+          setCartCount(0);
+        }
+      };
+      fetchCartCount();
+    } else {
+      setCartCount(0);
+    }
+  }, [isCustomer]);
+
+  // Listen for cart changes
+  useEffect(() => {
+    const handleCartChange = () => {
+      if (isCustomer) {
+        const fetchCartCount = async () => {
+          try {
+            const res = await cartApi.getCart();
+            const count = res?.data?.items?.length || 0;
+            setCartCount(count);
+          } catch (e) {
+            setCartCount(0);
+          }
+        };
+        fetchCartCount();
+      }
+    };
+
+    // Listen for custom cart change events
+    window.addEventListener('cartUpdated', handleCartChange);
+    return () => window.removeEventListener('cartUpdated', handleCartChange);
+  }, [isCustomer]);
 
   const handleLogout = () => {
     logout();
@@ -42,9 +83,9 @@ export default function DesktopNavbar({ notificationCount = 0 }) {
     } else {
       return [
         { to: "/", icon: BarChart3, label: "Trang chủ" },
-        { to: "/menu", icon: Utensils, label: "Thực đơn" },
+        { to: "/staff/menu", icon: Utensils, label: "Thực đơn" },
         { to: "/orders", icon: ClipboardList, label: "Đơn hàng" },
-        { to: "/reviews", icon: Star, label: "Đánh giá" },
+        { to: "/staff/reviews", icon: Star, label: "Đánh giá" },
         { to: "/profile", icon: User, label: "Cá nhân" },
       ];
     }
@@ -85,12 +126,17 @@ export default function DesktopNavbar({ notificationCount = 0 }) {
 
       {/* Right Section: Cart + Theme + User */}
       <div className="flex items-center space-x-4">
-        {/* Cart button (compact on desktop) */}
-        <Button variant="ghost" size="icon" onClick={() => navigate('/cart')} className="relative">
-          <ShoppingCart className="h-5 w-5" />
-          {/* Example badge placeholder, wire to cart count if available */}
-          <Badge className="absolute -top-1 -right-1 px-1 h-5 min-w-[1.25rem] flex items-center justify-center" variant="secondary">0</Badge>
-        </Button>
+        {/* Cart button (only show for customers) */}
+        {isCustomer && (
+          <Button variant="ghost" size="icon" onClick={() => navigate('/cart')} className="relative">
+            <ShoppingCart className="h-5 w-5" />
+            {cartCount > 0 && (
+              <Badge className="absolute -top-1 -right-1 px-1 h-5 min-w-[1.25rem] flex items-center justify-center" variant="destructive">
+                {cartCount > 99 ? "99+" : cartCount}
+              </Badge>
+            )}
+          </Button>
+        )}
 
         {/* Theme Toggle */}
         <ThemeToggle />

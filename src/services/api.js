@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { toast } from '@/utils/toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://food-app-server-production.up.railway.app';
 
@@ -62,23 +63,34 @@ api.interceptors.response.use(
   }
 );
 
+// fetchApi now supports toast options via config: { toastSuccess, toastError }
 const fetchApi = async (url, method = 'GET', data = null, params = null, config = {}) => {
+  const { toastSuccess, toastError, successMessage, errorMessage, ...axiosConfig } = config || {};
   try {
     const response = await api({
       url,
       method,
       data,
       params,
-      ...config,
+      ...axiosConfig,
     });
-    return response.data;
+    const body = response.data;
+    if (toastSuccess) {
+      const msg = successMessage || body?.message || 'Thành công';
+      toast.success(msg);
+    }
+    return body;
   } catch (error) {
+    const msg = error.response?.data?.message || error.message || 'API request failed';
+    if (toastError) {
+      toast.error(errorMessage || msg);
+    }
     if (error.response) {
       throw new Error(error.response.data?.message || `HTTP ${error.response.status}`);
     } else if (error.request) {
       throw new Error('Không thể kết nối đến server');
     } else {
-      throw new Error(error.message || 'API request failed');
+      throw new Error(msg);
     }
   }
 };
