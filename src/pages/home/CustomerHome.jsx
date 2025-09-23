@@ -181,14 +181,14 @@ const CustomerHome = () => {
 
       {/* Location box */}
       <div className="max-w-7xl mx-auto px-4 py-4">
-        <Card>
-          <CardContent className="py-4 flex items-center justify-between gap-4">
+        <Card className='py-2'>
+          <CardContent className=" flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <MapPin className="h-5 w-5 text-primary" />
               <div>
                 <div className="text-sm text-muted-foreground">Địa chỉ hiện tại</div>
                 <div className="text-sm font-medium">
-                  {location ? (location.address || `${location.lat.toFixed(5)}, ${location.lon.toFixed(5)}`) : 'Chưa thiết lập' }
+                  {location ? (location.address.slice(0, 30) + (location.address.length > 30 ? '...' : '')) : 'Chưa thiết lập'}
                 </div>
               </div>
             </div>
@@ -210,7 +210,7 @@ const CustomerHome = () => {
               key="all"
               variant={selectedCategoryId ? 'secondary' : 'default'}
               className="whitespace-nowrap cursor-pointer"
-              onClick={() => setSelectedCategoryId(null)}
+              onClick={() => navigate('/search')}
             >
               Tất cả
             </Badge>
@@ -245,31 +245,31 @@ const CustomerHome = () => {
       </div> */}
 
       {/* Popular Keywords */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
+      {/* <div className="max-w-7xl mx-auto px-4 py-4">
         <div className="flex flex-wrap gap-2">
           {popularKeywords.map((keyword) => (
             <Badge
               key={keyword}
               variant="secondary"
               className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-              onClick={() => handleKeywordSearch(keyword)}
+              onClick={() => navigate(`/search?q=${encodeURIComponent(keyword)}`)}
             >
               {keyword}
             </Badge>
           ))}
         </div>
-      </div>
+      </div> */}
 
       {/* Food Grid */}
       <div className="max-w-7xl mx-auto px-4 pb-8">
         {foods.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2">
             {foods.map((food) => (
               <FoodCard
                 key={food.id}
                 food={food}
                 onClick={handleFoodClick}
-                showAddButton={true}
+                showAddButton={false}
               />
             ))}
           </div>

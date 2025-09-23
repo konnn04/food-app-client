@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "../../components/ui/button";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,11 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
-import { Separator } from "../../components/ui/separator";
-import { Checkbox } from "../../components/ui/checkbox";
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import {
   ArrowLeft,
   MapPin,
@@ -26,8 +27,8 @@ import {
   Plus,
   Minus,
 } from "lucide-react";
-import { foodApi } from "../../services/foodApi";
-import { cartApi } from "../../services/cartApi";
+import { foodApi } from "@/services/foodApi";
+import { cartApi } from "@/services/cartApi";
 import { toast } from "sonner";
 import { reviewApi } from "@/services/reviewApi";
 import useAuth from "@/hooks/useAuth";
@@ -80,7 +81,7 @@ const FoodDetailPage = () => {
             has_next: typeof p.has_next === "boolean" ? p.has_next : false,
           });
         }
-      } catch (_) {}
+      } catch (_) { }
     })();
   }, [id]);
 
@@ -237,7 +238,10 @@ const FoodDetailPage = () => {
                 className="w-full h-80 object-cover rounded-lg"
               />
               {food.categories.length > 0 && (
-                <Badge className="absolute top-4 left-4">
+                <Badge
+                  className="absolute top-4 left-4 cursor-pointer hover:bg-primary/80"
+                  onClick={() => navigate(`/search?q=${encodeURIComponent(food.categories[0])}`)}
+                >
                   {food.categories[0]}
                 </Badge>
               )}
@@ -256,7 +260,12 @@ const FoodDetailPage = () => {
                     <h4 className="font-medium mb-2">Danh mục</h4>
                     <div className="flex flex-wrap gap-2">
                       {food.categories.map((category, index) => (
-                        <Badge key={index} variant="secondary">
+                        <Badge
+                          key={index}
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-secondary/80"
+                          onClick={() => navigate(`/search?q=${encodeURIComponent(category)}`)}
+                        >
                           {category}
                         </Badge>
                       ))}
@@ -281,15 +290,25 @@ const FoodDetailPage = () => {
             {food.restaurant && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
+                  <CardTitle 
+                    className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors"
+                    onClick={() => navigate(`/restaurant/${food.restaurant.id}`)}
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={food.restaurant.image_url}
+                        alt={food.restaurant.name}
+                      />
+                    </Avatar>
                     {food.restaurant.name}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-2 text-sm">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>{food.restaurant.address}</span>
+                    <Link className="" to={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(food.restaurant.address)}`} target="_blank" rel="noopener noreferrer">
+                      <span>{food.restaurant.address}</span>
+                    </Link>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="h-4 w-4 text-muted-foreground" />
@@ -307,39 +326,23 @@ const FoodDetailPage = () => {
               </Card>
             )}
 
-            {/* Toppings */}
             {food.toppings && food.toppings.length > 0 && (
               <Card>
                 <CardHeader>
                   <CardTitle>Toppings tùy chọn</CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {food.toppings.map((topping) => (
-                    <div
-                      key={topping.id}
-                      className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={selectedToppings.some(
-                            (t) => t.id === topping.id
-                          )}
-                          onCheckedChange={() => toggleTopping(topping)}
-                        />
-                        <div>
-                          <p className="font-medium">{topping.name}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatPrice(topping.price)}₫
-                          </p>
-                        </div>
+                <CardContent>
+                  <div className="divide-y">
+                    {food.toppings.map((topping) => (
+                      <div key={topping.id} className="flex items-center justify-between py-2">
+                        <span className="font-medium">{topping.name}</span>
+                        <span className="text-muted-foreground">{formatPrice(topping.price)}₫</span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             )}
-
-            {/* Order Section */}
             <Card>
               <CardHeader>
                 <CardTitle>Đặt hàng</CardTitle>

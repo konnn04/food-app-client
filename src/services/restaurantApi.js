@@ -8,6 +8,13 @@ export const restaurantApi = {
   getRestaurantDetail: async (restaurantId) => {
     return await fetchApi(`/api/restaurant/${restaurantId}/detail`, 'GET');
   },
+
+  getRestaurants: async (params = {}) => {
+    return await fetchApi('/api/customer/restaurant/', 'GET', null, params);
+  },  
+  getRandomRestaurants: async (params = {}) => {
+    return await fetchApi('/api/customer/restaurant/random/', 'GET', null, params);
+  }
 };
 
 

@@ -21,10 +21,10 @@ export default function MobileHeader({ notificationCount = 0 }) {
 
       <div className="flex items-center gap-1">
         {/* Cart prominent button on mobile */}
-        <Button variant="default" size="icon" className="relative bg-orange-500 hover:bg-orange-600" onClick={() => navigate('/cart')}>
+        {/* <Button variant="default" size="icon" className="relative bg-orange-500 hover:bg-orange-600" onClick={() => navigate('/cart')}>
           <ShoppingCart className="h-5 w-5" />
           <Badge className="absolute -top-1 -right-1 px-1 h-5 min-w-[1.25rem] flex items-center justify-center" variant="secondary">0</Badge>
-        </Button>
+        </Button> */}
         {/* Notifications */}
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />
