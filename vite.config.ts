@@ -27,8 +27,8 @@ export default defineConfig({
     }
   },
   server: {
-    allowedHosts: ['www.konnn04.live'],
-    port: 3000,
+    allowedHosts: ['www.konnn04.live', 'localhost', 'railway.app'],
+    port: 5173,
     host: true
   },
   preview: {

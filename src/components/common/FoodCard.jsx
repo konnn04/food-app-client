@@ -21,7 +21,7 @@ export default function FoodCard({
     distance_km,
     restaurant,
     available,
-    categories = []
+    categories = [],
   } = food;
 
   const formatPrice = (price) => {
@@ -63,9 +63,11 @@ export default function FoodCard({
         {/* Food Info */}
         <div className="space-y-2">
           <h3 className="font-semibold text-lg line-clamp-1">{name}</h3>
+          <h6 className="text-sm text-gray-600 line-clamp-2">{restaurant?.name}</h6>
           {/* Distance */}
           {distance_km && (
             <div className="text-sm text-gray-500">
+              <MapPin className="inline-block mr-1 h-4 w-4" />
               Cách {formatDistance(distance_km)}
             </div>
           )}

@@ -3,7 +3,7 @@ import { fetchApi } from './api.js';
 export const reviewApi = {
   // Public fetch reviews by food or restaurant
   getFoodReviews: async (foodId, params = {}) => {
-    return await fetchApi(`/api/review/food/${foodId}/`, 'GET', null, params);
+    return await fetchApi(`/api/customer/reviews/${foodId}/`, 'GET', null, params);
   },
   getRestaurantReviews: async (restaurantId, params = {}) => {
     return await fetchApi(`/api/review/restaurant/${restaurantId}/`, 'GET', null, params);

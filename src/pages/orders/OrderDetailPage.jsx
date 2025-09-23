@@ -9,8 +9,11 @@ import useAuth from '@/hooks/useAuth';
 import { paymentApi } from '@/services/paymentApi';
 import { toast } from '@/utils/toast';
 import { openPaymentPopupWithRefresh } from '@/utils/paymentPopup';
-import { ArrowLeft, MapPin, Phone, Clock, Package, X, CreditCard, Wallet } from 'lucide-react';
+import { ArrowLeft, MapPin, Phone, Clock, Package, X, CreditCard, Wallet, Check, Utensils, Truck, Home, Star } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { reviewApi } from '@/services/reviewApi';
 
 const OrderDetailPage = () => {
   const { id } = useParams();
@@ -281,6 +284,85 @@ const OrderDetailPage = () => {
           </CardContent>
         </Card>
 
+        {/* Order Progress Timeline */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="h-5 w-5" />
+              Trạng thái đơn hàng
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="relative">
+              {/* Timeline track */}
+              <div className="absolute top-5 left-0 right-0 h-1 bg-muted" />
+              
+              <div className="relative flex justify-between">
+                {/* Step 1: Pending */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 ${
+                    ['pending'].includes(order.status) ? 'bg-primary text-primary-foreground' : 
+                    ['paid', 'accepted', 'done', 'completed'].includes(order.status) ? 'bg-green-500 text-white' : 'bg-muted'
+                  }`}>
+                    {['paid', 'accepted', 'done', 'completed'].includes(order.status) ? 
+                      <Check className="h-5 w-5" /> : 
+                      <CreditCard className="h-5 w-5" />
+                    }
+                  </div>
+                  <span className="text-xs text-center mt-2 font-medium">Chờ thanh toán</span>
+                </div>
+                
+                {/* Step 2: Accepted */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 ${
+                    ['accepted'].includes(order.status) ? 'bg-primary text-primary-foreground' : 
+                    ['done', 'completed'].includes(order.status) ? 'bg-green-500 text-white' : 
+                    ['pending', 'cancelled'].includes(order.status) ? 'bg-muted' : 'bg-blue-500 text-white'
+                  }`}>
+                    {['done', 'completed'].includes(order.status) ? 
+                      <Check className="h-5 w-5" /> : 
+                      <Utensils className="h-5 w-5" />
+                    }
+                  </div>
+                  <span className="text-xs text-center mt-2 font-medium">Đã nhận đơn</span>
+                </div>
+                
+                {/* Step 3: Done (cooking) */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 ${
+                    ['done'].includes(order.status) ? 'bg-primary text-primary-foreground' : 
+                    ['completed'].includes(order.status) ? 'bg-green-500 text-white' : 
+                    ['pending', 'paid', 'cancelled'].includes(order.status) ? 'bg-muted' : 'bg-blue-500 text-white'
+                  }`}>
+                    {['completed'].includes(order.status) ? 
+                      <Check className="h-5 w-5" /> : 
+                      <Truck className="h-5 w-5" />
+                    }
+                  </div>
+                  <span className="text-xs text-center mt-2 font-medium">Đã nấu xong<br/>Đang giao</span>
+                </div>
+                
+                {/* Step 4: Completed (delivered) */}
+                <div className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center z-10 ${
+                    ['completed'].includes(order.status) ? 'bg-green-500 text-white' : 'bg-muted'
+                  }`}>
+                    <Home className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs text-center mt-2 font-medium">Đã giao hàng</span>
+                </div>
+              </div>
+              
+              {/* For cancelled orders */}
+              {order.status === 'cancelled' && (
+                <div className="mt-8 p-3 border border-red-200 bg-red-50 rounded-lg text-center">
+                  <p className="text-red-600 font-medium">Đơn hàng đã bị hủy</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Order Items */}
         <Card>
           <CardHeader>
@@ -318,37 +400,54 @@ const OrderDetailPage = () => {
         </Card>
 
         {/* Actions */}
-        {(canCancel || canPay || !isCustomer) && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            {canPay && (
+              <Button
+                onClick={handlePayment}
+                disabled={paying}
+                className="w-full"
+              >
+                <CreditCard className="h-4 w-4 mr-2" />
+                {paying ? 'Đang xử lý thanh toán...' : 'Thanh toán đơn hàng'}
+              </Button>
+            )}
+            
+            {/* Make sure the cancel button is always visible when conditions are met */}
+            {canCancel && (
+              <Button
+                variant="destructive"
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="w-full"
+              >
+                <X className="h-4 w-4 mr-2" />
+                {cancelling ? 'Đang hủy...' : 'Hủy đơn hàng'}
+              </Button>
+            )}
+            
+            {!isCustomer && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                <Button disabled={!canAccept} onClick={() => staffAction('accept')}>Nhận đơn</Button>
+                <Button disabled={!canMarkDone} onClick={() => staffAction('done')}>Đánh dấu xong món</Button>
+                <Button disabled={!canComplete} onClick={() => staffAction('complete')}>Hoàn tất</Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Review Section - Only for completed orders and customers */}
+        {isCustomer && order.status === 'completed' && (
           <Card>
-            <CardContent className="p-4 space-y-3">
-              {canPay && (
-                <Button
-                  onClick={handlePayment}
-                  disabled={paying}
-                  className="w-full"
-                >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  {paying ? 'Đang xử lý thanh toán...' : 'Thanh toán đơn hàng'}
-                </Button>
-              )}
-              {canCancel && (
-                <Button
-                  variant="destructive"
-                  onClick={handleCancel}
-                  disabled={cancelling}
-                  className="w-full"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  {cancelling ? 'Đang hủy...' : 'Hủy đơn hàng'}
-                </Button>
-              )}
-              {!isCustomer && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                  <Button disabled={!canAccept} onClick={() => staffAction('accept')}>Nhận đơn</Button>
-                  <Button disabled={!canMarkDone} onClick={() => staffAction('done')}>Đánh dấu xong món</Button>
-                  <Button disabled={!canComplete} onClick={() => staffAction('complete')}>Hoàn tất</Button>
-                </div>
-              )}
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Star className="h-5 w-5" /> Đánh giá món ăn
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {(order.items || []).map((item) => (
+                <ReviewItemCard key={item.id} item={item} />
+              ))}
             </CardContent>
           </Card>
         )}
@@ -369,6 +468,127 @@ const OrderDetailPage = () => {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+    </div>
+  );
+};
+
+// Review Item Card Component
+const ReviewItemCard = ({ item }) => {
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState('');
+  const [hasReviewed, setHasReviewed] = useState(item.has_reviewed);
+
+  const handleSubmitReview = async () => {
+    try {
+      setSubmitting(true);
+      await reviewApi.createCustomerReview({
+        food_id: item.food_id,
+        rating: Number(rating),
+        comment: comment,
+      });
+      toast.success('Đánh giá thành công!');
+      setHasReviewed(true);
+      setIsReviewing(false);
+    } catch (e) {
+      toast.error(e.message || 'Không thể gửi đánh giá');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (hasReviewed) {
+    return (
+      <div className="p-3 border rounded-lg">
+        <div className="flex items-center gap-4">
+          <img
+            src={item.food_image}
+            alt={item.food_name}
+            className="w-16 h-16 rounded object-cover"
+          />
+          <div>
+            <h4 className="font-medium">{item.food_name}</h4>
+            <div className="text-green-600 flex items-center mt-1">
+              <Check className="h-4 w-4 mr-1" />
+              <span className="text-sm">Đã đánh giá</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-3 border rounded-lg">
+      <div className="flex items-center gap-4">
+        <img
+          src={item.food_image}
+          alt={item.food_name}
+          className="w-16 h-16 rounded object-cover"
+        />
+        <div className="flex-1">
+          <h4 className="font-medium">{item.food_name}</h4>
+          {!isReviewing && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={() => setIsReviewing(true)}
+            >
+              <Star className="h-4 w-4 mr-1" />
+              Đánh giá món này
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {isReviewing && (
+        <div className="mt-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">Đánh giá:</span>
+            <Select value={rating.toString()} onValueChange={(value) => setRating(Number(value))}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Chọn sao" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 sao ★★★★★</SelectItem>
+                <SelectItem value="4">4 sao ★★★★☆</SelectItem>
+                <SelectItem value="3">3 sao ★★★☆☆</SelectItem>
+                <SelectItem value="2">2 sao ★★☆☆☆</SelectItem>
+                <SelectItem value="1">1 sao ★☆☆☆☆</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div>
+            <label className="text-sm font-medium mb-1 block">Nhận xét:</label>
+            <Textarea 
+              placeholder="Chia sẻ cảm nhận của bạn về món ăn này..." 
+              value={comment}
+              onChange={(e) => setComment(e.target.value)}
+              rows={3}
+            />
+          </div>
+          
+          <div className="flex gap-2 justify-end">
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setIsReviewing(false)}
+            >
+              Hủy
+            </Button>
+            <Button 
+              size="sm"
+              onClick={handleSubmitReview}
+              disabled={submitting}
+            >
+              {submitting ? "Đang gửi..." : "Gửi đánh giá"}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
